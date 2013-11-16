@@ -4,6 +4,7 @@ import urllib.request
 import shutil
 import time
 import subprocess
+import zipfile
 from distutils.version import StrictVersion
 
 min_adb_version = "1.0.5"
@@ -18,6 +19,10 @@ def download(url,dest):
 def run(cmd):
     p = subprocess.check_output(cmd.split(" "))
     return p.decode("utf-8")
+
+def extract(filename) :
+   zipFile = zipfile.ZipFile("%s/%s" % (work_dir,filename))
+   zipFile.extractall(work_dir)
 
 def sanity_check():
 
@@ -57,8 +62,11 @@ def sanity_check():
 if (sanity_check()):
 
     sys.stdout.write("Downloading boot.img ... ")
-
     download("https://dl.google.com/glass/xe11/boot.img","boot.img")
+    sys.stdout.write("Done \n")
+
+    sys.stdout.write("Downloading superuser.zip ... ")
+    download("http://download.clockworkmod.com/superuser/superuser.zip","superuser.zip")
     sys.stdout.write("Done \n")
 
     sys.stdout.write("Rebooting Glass into fastboot mode ... ")
@@ -83,3 +91,15 @@ if (sanity_check()):
     run('fastboot reboot')
     sys.stdout.write("Done \n")
 
+    sys.stdout.write("Installing Superuser and su ... \n")
+    extract('superuser.zip')
+    # replace with something to detect when thing is actually rebooted
+    # for now sleep for one min
+    time.sleep(60)
+    run("adb root")
+    run("adb install %s/Superuser.apk" % work_dir)
+    run("adb push %s/armeabi/su /system/bin/" % work_dir)
+    run("adb push %s/armeabi/su /system/xbin/" % work_dir)
+    run("adb shell 4755 /system/bin/su")
+    run("adb shell 4755 /system/xbin/su")
+    sys.stdout.write("Done \n")
