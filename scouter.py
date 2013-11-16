@@ -103,3 +103,8 @@ if (sanity_check()):
     run("adb shell 4755 /system/bin/su")
     run("adb shell 4755 /system/xbin/su")
     sys.stdout.write("Done \n")
+
+    sys.stdout.write("Enabling labs in build.prop ... \n")
+    run("adb shell mount -o remount,rw /system")
+    run("adb push ./build.prop /system/build.prop")
+    sys.stdout.write("Done \n")
